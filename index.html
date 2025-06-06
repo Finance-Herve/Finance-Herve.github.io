@@ -1,327 +1,405 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Suivi Financier</title>
-  <style>
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f4f7fa;
-      color: #333;
-    }
-    #userGmailIcon {
-      position: fixed;
-      top: 12px;
-      right: 12px;
-      cursor: pointer;
-      z-index: 9999;
-    }
-    #userMenu {
-      position: fixed;
-      top: 50px;
-      right: 12px;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      display: none;
-      z-index: 9999;
-    }
-    #soldeBox {
-      position: fixed;
-      top: 12px;
-      left: 12px;
-      background: white;
-      padding: 10px 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(11, 61, 145, 0.15);
-      font-size: 16px;
-      font-weight: bold;
-      color: #0b3d91;
-      z-index: 9998;
-    }
-    h2 {
-      color: #0b3d91;
-      margin-top: 60px;
-      margin-bottom: 15px;
-    }
-    form {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(11, 61, 145, 0.15);
-      margin-bottom: 30px;
-      max-width: 400px;
-    }
-    label {
-      font-weight: bold;
-      display: block;
-      margin-top: 10px;
-      margin-bottom: 5px;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      font-size: 15px;
-      border: 1px solid #bbb;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
-    input:focus, select:focus {
-      border-color: #0b3d91;
-      outline: none;
-    }
-    button {
-      background: #0b3d91;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      margin-top: 15px;
-    }
-    button:hover {
-      background: #083070;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 2px 6px rgba(11, 61, 145, 0.15);
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 20px;
-    }
-    th, td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    th {
-      background: #0b3d91;
-      color: white;
-    }
-    tr:hover {
-      background: #f1f6ff;
-    }
-    .btn-action {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      font-size: 18px;
-      margin-right: 8px;
-      color: #0b3d91;
-    }
-    .btn-action:hover {
-      color: #083070;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Suivi Financier</title>
+<style>
+  body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: #f4f7fa;
+    color: #333;
+  }
+  #userGmailIcon {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    cursor: pointer;
+    z-index: 9999;
+  }
+  #userMenu {
+    position: fixed;
+    top: 50px;
+    right: 12px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    display: none;
+    z-index: 9999;
+  }
+  #soldeBox {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    background: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(11, 61, 145, 0.15);
+    font-size: 16px;
+    font-weight: bold;
+    color: #0b3d91;
+    z-index: 9998;
+  }
+  h2 {
+    color: #0b3d91;
+    margin-top: 60px;
+    margin-bottom: 15px;
+  }
+  form {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(11, 61, 145, 0.15);
+    margin-bottom: 30px;
+    max-width: 400px;
+  }
+  label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 5px;
+  }
+  input, select, button {
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  input:focus, select:focus {
+    border-color: #0b3d91;
+    outline: none;
+  }
+  button {
+    background: #0b3d91;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 15px;
+  }
+  button:hover {
+    background: #083070;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 6px rgba(11, 61, 145, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 20px;
+  }
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  th {
+    background: #0b3d91;
+    color: white;
+  }
+  tr:hover {
+    background: #f1f6ff;
+  }
+  .btn-action {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    margin-right: 8px;
+    color: #0b3d91;
+  }
+  .btn-action:hover {
+    color: #083070;
+  }
+</style>
 </head>
 <body>
-  <img id="userGmailIcon" src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" width="32" height="32" title="Afficher/masquer menu" />
-  <div id="userMenu"></div>
-  <div id="soldeBox">Solde : <span id="solde">0.00</span> FCFA</div>
 
-  <form id="loginForm">
-    <h2>Connexion</h2>
-    <input type="email" id="loginEmail" placeholder="Email" required />
-    <input type="password" id="loginPassword" placeholder="Mot de passe" required />
-    <button type="submit">Se connecter</button>
+<!-- Icône Gmail cliquable -->
+<img id="userGmailIcon" src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" width="32" height="32" title="Afficher/masquer menu" />
+
+<!-- Menu utilisateur affiché au clic -->
+<div id="userMenu"></div>
+
+<!-- Affichage du solde -->
+<div id="soldeBox">Solde : <span id="solde">0.00</span> FCFA</div>
+
+<!-- Formulaire de connexion -->
+<form id="loginForm">
+  <h2>Connexion</h2>
+  <input type="email" id="loginEmail" placeholder="Email" required />
+  <input type="password" id="loginPassword" placeholder="Mot de passe" required />
+  <button type="submit">Se connecter</button>
+</form>
+
+<!-- Formulaire d'inscription -->
+<form id="registerForm">
+  <h2>Inscription</h2>
+  <input type="email" id="registerEmail" placeholder="Email" required />
+  <input type="password" id="registerPassword" placeholder="Mot de passe" required minlength="6" />
+  <button type="submit">S'inscrire</button>
+</form>
+
+<!-- Section finance (visible uniquement quand connecté) -->
+<section id="financeSection" style="display:none;">
+  <h2>Ajouter une transaction</h2>
+  <form id="financeForm">
+    <label for="date">Date</label>
+    <input type="date" id="date" required placeholder="Date" />
+    <label for="type">Type</label>
+    <select id="type" required>
+      <option value="bénéfice">Bénéfice</option>
+      <option value="dette">Dette</option>
+    </select>
+    <label for="montant">Montant</label>
+    <input type="number" id="montant" placeholder="Montant (FCFA)" step="0.01" required />
+    <label for="description">Description</label>
+    <input type="text" id="description" placeholder="Description" />
+    <button type="submit">Ajouter</button>
   </form>
 
-  <form id="registerForm">
-    <h2>Inscription</h2>
-    <input type="email" id="registerEmail" placeholder="Email" required />
-    <input type="password" id="registerPassword" placeholder="Mot de passe" required minlength="6" />
-    <button type="submit">S'inscrire</button>
-  </form>
+  <table id="tableau">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Montant (FCFA)</th>
+        <th>Description</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
 
-  <section id="financeSection" style="display:none;">
-    <h2>Ajouter une transaction</h2>
-    <form id="financeForm">
-      <label for="date">Date</label>
-      <input type="date" id="date" required />
-      <label for="type">Type</label>
-      <select id="type" required>
-        <option value="bénéfice">Bénéfice</option>
-        <option value="dette">Dette</option>
-      </select>
-      <label for="montant">Montant</label>
-      <input type="number" id="montant" placeholder="Montant (FCFA)" step="0.01" required />
-      <label for="description">Description</label>
-      <input type="text" id="description" placeholder="Description" />
-      <button type="submit">Ajouter</button>
-    </form>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+  import { getDatabase, ref, push, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-database.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
 
-    <table id="tableau">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Type</th>
-          <th>Montant (FCFA)</th>
-          <th>Description</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDOCmfhq0IImy7qs4o4ElLmbiS5IUuK00c",
+    authDomain: "finances-a44b6.firebaseapp.com",
+    projectId: "finances-a44b6",
+    storageBucket: "finances-a44b6.appspot.com",
+    messagingSenderId: "209247535782",
+    appId: "1:209247535782:web:3781f9382199b29365ea67",
+    databaseURL: "https://finances-a44b6-default-rtdb.firebaseio.com"
+  };
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, push, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  // UID de l'administrateur (à modifier avec ton UID admin Firebase)
+  const ADMIN_UID = "vceEwnJRTeZ4n5hCjDh0OWUciiy1";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBz1TCvYIs6LmX7K1OI6iYIylRQbWSoyV4",
-      authDomain: "suivi-financier-5d4d8.firebaseapp.com",
-      databaseURL: "https://suivi-financier-5d4d8-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "suivi-financier-5d4d8",
-      storageBucket: "suivi-financier-5d4d8.appspot.com",
-      messagingSenderId: "1049367187239",
-      appId: "1:1049367187239:web:975fcd8e60d43d6850e302"
-    };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
 
-    const ADMIN_UID = "lrPodNjAlPRM1ZTpbHxkQBvvjG62";
+  let currentEditKey = null;
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
+  const loginForm = document.getElementById("loginForm");
+  const registerForm = document.getElementById("registerForm");
+  const financeSection = document.getElementById("financeSection");
+  const tableauBody = document.querySelector("#tableau tbody");
+  const solde = document.getElementById("solde");
+  const financeForm = document.getElementById("financeForm");
+  const userGmailIcon = document.getElementById("userGmailIcon");
+  const userMenu = document.getElementById("userMenu");
 
-    let currentEditKey = null;
-
-    const loginForm = document.getElementById("loginForm");
-    const registerForm = document.getElementById("registerForm");
-    const financeSection = document.getElementById("financeSection");
-    const tableauBody = document.querySelector("#tableau tbody");
-    const solde = document.getElementById("solde");
-    const financeForm = document.getElementById("financeForm");
-    const userGmailIcon = document.getElementById("userGmailIcon");
-    const userMenu = document.getElementById("userMenu");
-
-    userGmailIcon.addEventListener("click", () => {
-      if (auth.currentUser) {
-        userMenu.innerHTML = `
-          <div><strong>${auth.currentUser.email}</strong></div>
-          <button onclick="firebaseSignOut()">Déconnexion</button>
-        `;
-        userMenu.style.display = userMenu.style.display === "block" ? "none" : "block";
-      }
-    });
-
-    window.firebaseSignOut = () => {
-      signOut(auth);
-      userMenu.style.display = "none";
-    };
-
-    loginForm.onsubmit = async (e) => {
-      e.preventDefault();
-      try {
-        await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
-        loginForm.reset();
-      } catch (e) {
-        alert("Erreur connexion : " + e.message);
-      }
-    };
-
-    registerForm.onsubmit = async (e) => {
-      e.preventDefault();
-      try {
-        await createUserWithEmailAndPassword(auth, registerEmail.value, registerPassword.value);
-        alert("Inscription réussie !");
-        registerForm.reset();
-      } catch (e) {
-        alert("Erreur inscription : " + e.message);
-      }
-    };
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        loginForm.style.display = "none";
-        registerForm.style.display = "none";
-        financeSection.style.display = "block";
-        setupFinance(user.uid);
-      } else {
-        loginForm.style.display = "block";
-        registerForm.style.display = "block";
-        financeSection.style.display = "none";
-        tableauBody.innerHTML = "";
-        solde.textContent = "0.00";
-      }
-    });
-
-    function setupFinance(uid) {
-      const transactionsRef = ref(db, "transactions");
-
-      financeForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const date = document.getElementById("date").value;
-        const type = document.getElementById("type").value;
-        const montant = parseFloat(document.getElementById("montant").value);
-        const description = document.getElementById("description").value;
-
-        if (!date || isNaN(montant)) return alert("Date et montant valides requis");
-
-        if (currentEditKey) {
-          await update(ref(db, "transactions/" + currentEditKey), { date, type, montant, description });
-          currentEditKey = null;
-          financeForm.querySelector("button").textContent = "Ajouter";
-        } else {
-          const newRef = push(transactionsRef);
-          await set(newRef, { date, type, montant, description, uid });
-        }
-
-        financeForm.reset();
+  // Afficher/masquer menu utilisateur au clic sur l'icône Gmail
+  userGmailIcon.addEventListener("click", () => {
+    if (auth.currentUser) {
+      userMenu.innerHTML = `
+        <div><strong>${auth.currentUser.email}</strong></div>
+        <button id="btnLogout">Déconnexion</button>
+      `;
+      userMenu.style.display = userMenu.style.display === "block" ? "none" : "block";
+      document.getElementById("btnLogout").onclick = () => {
+        signOut(auth);
+        userMenu.style.display = "none";
       };
-
-      onValue(transactionsRef, (snapshot) => {
-        tableauBody.innerHTML = "";
-        let totalB = 0;
-        let totalD = 0;
-
-        snapshot.forEach((child) => {
-          const data = child.val();
-          const key = child.key;
-          if (uid !== ADMIN_UID && data.uid !== uid) return;
-
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${data.date}</td>
-            <td>${data.type}</td>
-            <td>${data.montant.toFixed(2)}</td>
-            <td>${data.description}</td>
-            <td>
-              <button class="btn-action" onclick="editTransaction('${key}', '${data.date}', '${data.type}', ${data.montant}, '${data.description.replace(/'/g, "\\'")}')">✏️</button>
-              <button class="btn-action" onclick="deleteTransaction('${key}')">🗑️</button>
-            </td>
-          `;
-          tableauBody.appendChild(row);
-
-          if (data.type === "bénéfice") totalB += data.montant;
-          else if (data.type === "dette") totalD += data.montant;
-        });
-
-        solde.textContent = (totalB - totalD).toFixed(2);
-      });
     }
+  });
 
-    window.deleteTransaction = async (key) => {
-      if (confirm("Supprimer cette ligne ?")) {
-        await remove(ref(db, "transactions/" + key));
+  // Connexion
+  loginForm.onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
+      loginForm.reset();
+    } catch (e) {
+      alert("Erreur connexion : " + e.message);
+    }
+  };
+
+  // Inscription
+  registerForm.onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await createUserWithEmailAndPassword(auth, registerEmail.value, registerPassword.value);
+      alert("Inscription réussie !");
+      registerForm.reset();
+    } catch (e) {
+      alert("Erreur inscription : " + e.message);
+    }
+  };
+
+  // Afficher/masquer sections selon état connexion
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginForm.style.display = "none";
+      registerForm.style.display = "none";
+      financeSection.style.display = "block";
+      loadTransactions(user.uid);
+    } else {
+      loginForm.style.display = "block";
+      registerForm.style.display = "block";
+      financeSection.style.display = "none";
+      tableauBody.innerHTML = "";
+      solde.textContent = "0.00";
+      userMenu.style.display = "none";
+    }
+  });
+
+  // Charger et afficher les transactions depuis la DB
+  function loadTransactions(uid) {
+    const path = uid === ADMIN_UID ? "transactions" : `transactions/${uid}`;
+    const dbRef = ref(db, path);
+
+    onValue(dbRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      tableauBody.innerHTML = "";
+      let totalBenefices = 0;
+      let totalDettes = 0;
+
+      // Si admin, data est un objet { uid: {...transactions} }
+      // Sinon, data est objet { key: transaction }
+      if (uid === ADMIN_UID) {
+        // Admin voit toutes les données, donc on parcourt par utilisateur
+        Object.entries(data).forEach(([userId, transactions]) => {
+          Object.entries(transactions || {}).forEach(([key, t]) => {
+            addTransactionRow(key, t, userId);
+            if (t.type === "bénéfice") totalBenefices += parseFloat(t.montant);
+            else if (t.type === "dette") totalDettes += parseFloat(t.montant);
+          });
+        });
+      } else {
+        Object.entries(data).forEach(([key, t]) => {
+          addTransactionRow(key, t, uid);
+          if (t.type === "bénéfice") totalBenefices += parseFloat(t.montant);
+          else if (t.type === "dette") totalDettes += parseFloat(t.montant);
+        });
       }
+
+      // Calcul du solde = bénéfices - dettes
+      const soldeValue = totalBenefices - totalDettes;
+      solde.textContent = soldeValue.toFixed(2);
+    });
+  }
+
+  // Ajout ligne tableau transaction
+  function addTransactionRow(key, transaction, userId) {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${transaction.date}</td>
+      <td>${transaction.type}</td>
+      <td>${parseFloat(transaction.montant).toFixed(2)}</td>
+      <td>${transaction.description || ""}</td>
+      <td>
+        <button class="btn-action" data-key="${key}" data-userid="${userId}" data-action="edit" title="Modifier">✏️</button>
+        <button class="btn-action" data-key="${key}" data-userid="${userId}" data-action="delete" title="Supprimer">🗑️</button>
+      </td>
+    `;
+
+    tableauBody.appendChild(tr);
+
+    // Écoute actions modifier/supprimer
+    tr.querySelectorAll(".btn-action").forEach(btn => {
+      btn.onclick = () => {
+        const key = btn.getAttribute("data-key");
+        const userId = btn.getAttribute("data-userid");
+        const action = btn.getAttribute("data-action");
+        if (action === "edit") editTransaction(key, userId);
+        else if (action === "delete") deleteTransaction(key, userId);
+      };
+    });
+  }
+
+  // Ajouter ou modifier transaction
+  financeForm.onsubmit = async (e) => {
+    e.preventDefault();
+
+    const user = auth.currentUser;
+    if (!user) return alert("Utilisateur non connecté.");
+
+    const uid = user.uid;
+
+    const data = {
+      date: financeForm.date.value,
+      type: financeForm.type.value,
+      montant: parseFloat(financeForm.montant.value).toFixed(2),
+      description: financeForm.description.value || ""
     };
 
-    window.editTransaction = (key, date, type, montant, description) => {
-      document.getElementById("date").value = date;
-      document.getElementById("type").value = type;
-      document.getElementById("montant").value = montant;
-      document.getElementById("description").value = description;
-      currentEditKey = key;
-      financeForm.querySelector("button").textContent = "Modifier";
-    };
-  </script>
+    try {
+      if (currentEditKey) {
+        // Modifier transaction
+        const path = uid === ADMIN_UID ? `transactions/${uid}/${currentEditKey}` : `transactions/${uid}/${currentEditKey}`;
+        await update(ref(db, path), data);
+        currentEditKey = null;
+        financeForm.querySelector("button").textContent = "Ajouter";
+      } else {
+        // Ajouter nouvelle transaction
+        const path = uid === ADMIN_UID ? `transactions/${uid}` : `transactions/${uid}`;
+        const newRef = push(ref(db, path));
+        await set(newRef, data);
+      }
+      financeForm.reset();
+    } catch (err) {
+      alert("Erreur lors de l'enregistrement : " + err.message);
+    }
+  };
+
+  // Remplir formulaire pour modifier
+  async function editTransaction(key, userId) {
+    const dbRef = ref(db, `transactions/${userId}/${key}`);
+    const snap = await new Promise(resolve => {
+      onValue(dbRef, (snapshot) => resolve(snapshot), { onlyOnce: true });
+    });
+    const data = snap.val();
+    if (!data) return alert("Transaction introuvable.");
+
+    financeForm.date.value = data.date;
+    financeForm.type.value = data.type;
+    financeForm.montant.value = data.montant;
+    financeForm.description.value = data.description || "";
+    currentEditKey = key;
+    financeForm.querySelector("button").textContent = "Modifier";
+  }
+
+  // Supprimer transaction
+  async function deleteTransaction(key, userId) {
+    if (!confirm("Confirmez-vous la suppression de cette transaction ?")) return;
+
+    try {
+      await remove(ref(db, `transactions/${userId}/${key}`));
+      if (currentEditKey === key) {
+        currentEditKey = null;
+        financeForm.reset();
+        financeForm.querySelector("button").textContent = "Ajouter";
+      }
+    } catch (err) {
+      alert("Erreur suppression : " + err.message);
+    }
+  }
+</script>
+
 </body>
 </html>
