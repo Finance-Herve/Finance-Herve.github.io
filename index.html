@@ -213,7 +213,7 @@
       appId: "1:1049367187239:web:975fcd8e60d43d6850e302"
     };
 
-    const ADMIN_UID = "lrPodNjAlPRM1ZTpbHxkQBvvjG62"; // à adapter si besoin
+    const ADMIN_UID = "lrPodNjAlPRM1ZTpbHxkQBvvjG62";
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -337,7 +337,7 @@
           tableauBody.appendChild(row);
 
           if (data.type === "bénéfice") totalB += data.montant;
-          else totalD += data.montant;
+          else if (data.type === "dette") totalD += data.montant;
         });
 
         totalBenefices.textContent = totalB.toFixed(2);
