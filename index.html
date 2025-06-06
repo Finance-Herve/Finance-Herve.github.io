@@ -331,9 +331,8 @@ tr:hover {
   
         totalBenefices.textContent = totalB.toFixed(2);  
         totalDettes.textContent = totalD.toFixed(2);  
-        solde.textContent = (totalB - totalD).toFixed(2);  
-      });  
-  
+        
+  solde.textContent = `Solde : ${(totalB - totalD).toFixed(2)} FCFA`;
       window.deleteTransaction = async (id) => {  
         if (confirm("Supprimer cette ligne ?")) await deleteDoc(doc(db, "transactions", id));  
       };  
