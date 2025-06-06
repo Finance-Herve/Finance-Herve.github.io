@@ -35,20 +35,22 @@
     }
 
     #soldeBox {
+      position: fixed;
+      top: 12px;
+      left: 12px;
       background: white;
       padding: 10px 20px;
       border-radius: 10px;
-      box-shadow: 0 2px 6px rgb(11 61 145 / 0.15);
+      box-shadow: 0 2px 6px rgba(11, 61, 145, 0.15);
       font-size: 16px;
       font-weight: bold;
       color: #0b3d91;
-      display: inline-block;
-      margin-bottom: 20px;
+      z-index: 9998;
     }
 
     h2 {
       color: #0b3d91;
-      margin-top: 40px;
+      margin-top: 60px;
       margin-bottom: 15px;
     }
 
@@ -56,7 +58,7 @@
       background: white;
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 2px 6px rgb(11 61 145 / 0.15);
+      box-shadow: 0 2px 6px rgba(11, 61, 145, 0.15);
       margin-bottom: 30px;
       max-width: 400px;
     }
@@ -99,9 +101,10 @@
       width: 100%;
       border-collapse: collapse;
       background: white;
-      box-shadow: 0 2px 6px rgb(11 61 145 / 0.15);
+      box-shadow: 0 2px 6px rgba(11, 61, 145, 0.15);
       border-radius: 10px;
       overflow: hidden;
+      margin-top: 20px;
     }
 
     th, td {
@@ -138,12 +141,10 @@
   </style>
 </head>
 <body>
-  <!-- Gmail Logo + Solde -->
   <img id="userGmailIcon" src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" width="32" height="32" title="Afficher/masquer menu" />
   <div id="userMenu"></div>
   <div id="soldeBox">Solde : <span id="solde">0.00</span> FCFA</div>
 
-  <!-- Connexion -->
   <form id="loginForm">
     <h2>Connexion</h2>
     <input type="email" id="loginEmail" placeholder="Email" required />
@@ -151,7 +152,6 @@
     <button type="submit">Se connecter</button>
   </form>
 
-  <!-- Inscription -->
   <form id="registerForm">
     <h2>Inscription</h2>
     <input type="email" id="registerEmail" placeholder="Email" required />
@@ -159,12 +159,11 @@
     <button type="submit">S'inscrire</button>
   </form>
 
-  <!-- Section Finance -->
   <section id="financeSection" style="display:none;">
     <h2>Ajouter une transaction</h2>
     <form id="financeForm">
       <label for="date">Date</label>
-      <input type="date" id="date" required />
+      <input type="date" id="date" required placeholder="Date" />
       <label for="type">Type</label>
       <select id="type" required>
         <option value="bénéfice">Bénéfice</option>
@@ -214,7 +213,7 @@
       appId: "1:1049367187239:web:975fcd8e60d43d6850e302"
     };
 
-    const ADMIN_UID = "lrPodNjAlPRM1ZTpbHxkQBvvjG62";
+    const ADMIN_UID = "lrPodNjAlPRM1ZTpbHxkQBvvjG62"; // à adapter si besoin
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -224,14 +223,14 @@
     const userGmailIcon = document.getElementById("userGmailIcon");
     const userMenu = document.getElementById("userMenu");
 
-    let loginForm = document.getElementById("loginForm");
-    let registerForm = document.getElementById("registerForm");
-    let financeSection = document.getElementById("financeSection");
-    let tableauBody = document.querySelector("#tableau tbody");
-    let totalBenefices = document.getElementById("totalBenefices");
-    let totalDettes = document.getElementById("totalDettes");
-    let solde = document.getElementById("solde");
-    let financeForm = document.getElementById("financeForm");
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const financeSection = document.getElementById("financeSection");
+    const tableauBody = document.querySelector("#tableau tbody");
+    const totalBenefices = document.getElementById("totalBenefices");
+    const totalDettes = document.getElementById("totalDettes");
+    const solde = document.getElementById("solde");
+    const financeForm = document.getElementById("financeForm");
 
     userGmailIcon.addEventListener("click", () => {
       if (auth.currentUser) {
@@ -278,6 +277,7 @@
         const userQuery = (user.uid === ADMIN_UID)
           ? query(financeRef)
           : query(financeRef, where("uid", "==", user.uid));
+
         setupFinance(userQuery, user.uid);
       } else {
         loginForm.style.display = "block";
@@ -297,6 +297,7 @@
         const type = document.getElementById("type").value;
         const montant = parseFloat(document.getElementById("montant").value);
         const description = document.getElementById("description").value;
+
         if (!date || isNaN(montant)) return alert("Date et montant valides requis");
 
         if (currentEditId) {
@@ -306,6 +307,7 @@
         } else {
           await addDoc(financeRef, { date, type, montant, description, uid });
         }
+
         financeForm.reset();
       };
 
@@ -318,6 +320,7 @@
           const data = docSnap.data();
           const id = docSnap.id;
           const canEdit = uid === ADMIN_UID || uid === data.uid;
+
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${data.date}</td>
@@ -357,4 +360,4 @@
     }
   </script>
 </body>
-  </html>
+</html>
