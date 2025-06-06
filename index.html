@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Suivi Financier</title>
   <style>
-    /* Même CSS que le tien, inchangé */
     body {
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -119,9 +118,6 @@
     .btn-action:hover {
       color: #083070;
     }
-    #totaux {
-      display: none;
-    }
   </style>
 </head>
 <body>
@@ -147,7 +143,7 @@
     <h2>Ajouter une transaction</h2>
     <form id="financeForm">
       <label for="date">Date</label>
-      <input type="date" id="date" required placeholder="Date" />
+      <input type="date" id="date" required />
       <label for="type">Type</label>
       <select id="type" required>
         <option value="bénéfice">Bénéfice</option>
@@ -177,9 +173,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, push, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-    import {
-      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBz1TCvYIs6LmX7K1OI6iYIylRQbWSoyV4",
@@ -196,6 +190,8 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const auth = getAuth(app);
+
+    let currentEditKey = null;
 
     const loginForm = document.getElementById("loginForm");
     const registerForm = document.getElementById("registerForm");
@@ -247,7 +243,6 @@
         loginForm.style.display = "none";
         registerForm.style.display = "none";
         financeSection.style.display = "block";
-
         setupFinance(user.uid);
       } else {
         loginForm.style.display = "block";
@@ -260,7 +255,6 @@
 
     function setupFinance(uid) {
       const transactionsRef = ref(db, "transactions");
-      let currentEditKey = null;
 
       financeForm.onsubmit = async (e) => {
         e.preventDefault();
@@ -307,7 +301,7 @@
           tableauBody.appendChild(row);
 
           if (data.type === "bénéfice") totalB += data.montant;
-          else totalD += data.montant;
+          else if (data.type === "dette") totalD += data.montant;
         });
 
         solde.textContent = (totalB - totalD).toFixed(2);
