@@ -1,213 +1,158 @@
-<!DOCTYPE html><html lang="fr">
+<!DOCTYPE html>
+<html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
   <title>Suivi Financier</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
-    /* Styles CSS bien structurés ici (inchangés car fonctionnels) */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .solde {
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+    .gmail-icon {
+      cursor: pointer;
+    }
+    .user-info {
+      margin-top: 10px;
+    }
+    form {
+      margin-top: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px;
+      text-align: left;
+    }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <!-- Gmail Icone + Solde -->
-  <img id="userGmailIcon" src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" width="32" height="32" title="Afficher/masquer menu" />
-  <div id="userMenu"></div>
-  <div id="soldeBox">Solde : <span id="solde">0.00</span> FCFA</div>  <!-- Connexion -->  <form id="loginForm">
-    <h2>Connexion</h2>
-    <input type="email" id="loginEmail" placeholder="Email" required />
-    <input type="password" id="loginPassword" placeholder="Mot de passe" required />
-    <button type="submit">Se connecter</button>
-  </form>  <!-- Inscription -->  <form id="registerForm">
-    <h2>Inscription</h2>
-    <input type="email" id="registerEmail" placeholder="Email" required />
-    <input type="password" id="registerPassword" placeholder="Mot de passe" required minlength="6" />
-    <button type="submit">S'inscrire</button>
-  </form>  <!-- Section principale des finances -->  <section id="financeSection" style="display:none;">
-    <h2>Ajouter une transaction</h2>
-    <form id="financeForm">
-      <label for="date">Date</label>
-      <input type="date" id="date" placeholder="Date" required />
-      <label for="type">Type</label>
-      <select id="type" required>
-        <option value="bénéfice">Bénéfice</option>
-        <option value="dette">Dette</option>
-      </select>
-      <label for="montant">Montant</label>
-      <input type="number" id="montant" placeholder="Montant (FCFA)" step="0.01" required />
-      <label for="description">Description</label>
-      <input type="text" id="description" placeholder="Description" />
-      <button type="submit">Ajouter</button>
-    </form><div id="totaux">
-  <p>Total bénéfices : <span id="totalBenefices">0.00</span> FCFA</p>
-  <p>Total dettes : <span id="totalDettes">0.00</span> FCFA</p>
+
+<div class="header">
+  <div class="solde" id="solde">Solde : 0 €</div>
+  <div>
+    <img src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/logo_gmail_lockup_default_1x_r2.png" alt="Gmail" width="80" class="gmail-icon" onclick="toggleUserInfo()">
+    <div id="user-info" class="user-info hidden">
+      <div id="user-email"></div>
+      <button onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
 </div>
 
-<table id="tableau">
+<form id="transaction-form">
+  <input type="number" id="montant" placeholder="Montant" required>
+  <select id="type">
+    <option value="benefice">Bénéfice</option>
+    <option value="dette">Dette</option>
+  </select>
+  <input type="text" id="description" placeholder="Description" required>
+  <input type="date" id="date" placeholder="Date" required>
+  <button type="submit">Ajouter</button>
+</form>
+
+<table>
   <thead>
     <tr>
-      <th>Date</th>
+      <th>Montant</th>
       <th>Type</th>
-      <th>Montant (FCFA)</th>
       <th>Description</th>
-      <th>Actions</th>
+      <th>Date</th>
     </tr>
   </thead>
-  <tbody></tbody>
+  <tbody id="transactions-body"></tbody>
 </table>
 
-  </section>  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+<script>
+  const firebaseConfig = {
+    apiKey: "TA_CLE_API",
+    authDomain: "TON_PROJET.firebaseapp.com",
+    databaseURL: "https://TON_PROJET.firebaseio.com",
+    projectId: "TON_PROJET",
+    storageBucket: "TON_PROJET.appspot.com",
+    messagingSenderId: "ID_ENVOI",
+    appId: "APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+  const adminUID = "lrPodNjAlPRM1ZTpbHxkQBvvjG62";
 
-    const firebaseConfig = {
-      apiKey: "VOTRE_API_KEY",
-      authDomain: "VOTRE_DOMAINE",
-      projectId: "VOTRE_ID_PROJECT",
-      storageBucket: "VOTRE_BUCKET",
-      messagingSenderId: "VOTRE_MESSAGING_ID",
-      appId: "VOTRE_APP_ID"
-    };
+  const soldeEl = document.getElementById('solde');
+  const userInfo = document.getElementById('user-info');
+  const userEmail = document.getElementById('user-email');
+  const form = document.getElementById('transaction-form');
+  const transactionsBody = document.getElementById('transactions-body');
 
-    const ADMIN_UID = "lrPodNjAlPRM1ZTpbHxkQBvvjG62";
+  let currentUID = null;
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    const financeRef = collection(db, "transactions");
+  function toggleUserInfo() {
+    userInfo.classList.toggle('hidden');
+  }
 
-    const userGmailIcon = document.getElementById("userGmailIcon");
-    const userMenu = document.getElementById("userMenu");
+  function logout() {
+    auth.signOut().then(() => location.reload());
+  }
 
-    let loginForm = document.getElementById("loginForm");
-    let registerForm = document.getElementById("registerForm");
-    let financeSection = document.getElementById("financeSection");
-    let tableauBody = document.querySelector("#tableau tbody");
-    let totalBenefices = document.getElementById("totalBenefices");
-    let totalDettes = document.getElementById("totalDettes");
-    let solde = document.getElementById("solde");
-    let financeForm = document.getElementById("financeForm");
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUID = user.uid;
+      userEmail.textContent = user.email;
 
-    userGmailIcon.addEventListener("click", () => {
-      if (auth.currentUser) {
-        userMenu.innerHTML = `
-          <div><strong>${auth.currentUser.email}</strong></div>
-          <button onclick="firebaseSignOut()">Déconnexion</button>
-        `;
-        userMenu.style.display = userMenu.style.display === "block" ? "none" : "block";
-      }
-    });
+      const userPath = (user.uid === adminUID) ? 'transactions' : `transactions/${user.uid}`;
 
-    window.firebaseSignOut = () => {
-      signOut(auth);
-      userMenu.style.display = "none";
-    };
-
-    loginForm.onsubmit = async (e) => {
-      e.preventDefault();
-      try {
-        await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
-        loginForm.reset();
-      } catch (e) {
-        alert("Erreur connexion : " + e.message);
-      }
-    };
-
-    registerForm.onsubmit = async (e) => {
-      e.preventDefault();
-      try {
-        await createUserWithEmailAndPassword(auth, registerEmail.value, registerPassword.value);
-        alert("Inscription réussie !");
-        registerForm.reset();
-      } catch (e) {
-        alert("Erreur inscription : " + e.message);
-      }
-    };
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        loginForm.style.display = "none";
-        registerForm.style.display = "none";
-        financeSection.style.display = "block";
-
-        const userQuery = (user.uid === ADMIN_UID)
-          ? query(financeRef)
-          : query(financeRef, where("uid", "==", user.uid));
-        setupFinance(userQuery, user.uid);
-      } else {
-        loginForm.style.display = "block";
-        registerForm.style.display = "block";
-        financeSection.style.display = "none";
-        tableauBody.innerHTML = "";
-        solde.textContent = "0.00";
-      }
-    });
-
-    function setupFinance(q, uid) {
-      let currentEditId = null;
-
-      financeForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const date = document.getElementById("date").value;
-        const type = document.getElementById("type").value;
-        const montant = parseFloat(document.getElementById("montant").value);
-        const description = document.getElementById("description").value;
-        if (!date || isNaN(montant)) return alert("Date et montant valides requis");
-
-        if (currentEditId) {
-          await updateDoc(doc(db, "transactions", currentEditId), { date, type, montant, description });
-          currentEditId = null;
-          financeForm.querySelector("button").textContent = "Ajouter";
-        } else {
-          await addDoc(financeRef, { date, type, montant, description, uid });
-        }
-        financeForm.reset();
-      };
-
-      onSnapshot(q, (snapshot) => {
-        tableauBody.innerHTML = "";
-        let totalB = 0;
-        let totalD = 0;
-
-        snapshot.forEach(docSnap => {
-          const data = docSnap.data();
-          const id = docSnap.id;
-          const canEdit = uid === ADMIN_UID || uid === data.uid;
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${data.date}</td>
+      db.ref(userPath).on('value', snapshot => {
+        let solde = 0;
+        transactionsBody.innerHTML = "";
+        snapshot.forEach(child => {
+          const data = child.val();
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${data.montant} €</td>
             <td>${data.type}</td>
-            <td>${data.montant.toFixed(2)}</td>
             <td>${data.description}</td>
-            <td>
-              ${canEdit ? `
-                <button class="btn-action" onclick="editTransaction('${id}', '${data.date}', '${data.type}', ${data.montant}, '${data.description.replace(/'/g, "\\'")}')">✏️</button>
-                <button class="btn-action" onclick="deleteTransaction('${id}')">🗑️</button>
-              ` : ''}
-            </td>
+            <td>${data.date}</td>
           `;
-          tableauBody.appendChild(row);
-
-          if (data.type === "bénéfice") totalB += data.montant;
-          else totalD += data.montant;
+          transactionsBody.appendChild(tr);
+          solde += (data.type === 'benefice') ? Number(data.montant) : -Number(data.montant);
         });
-
-        totalBenefices.textContent = totalB.toFixed(2);
-        totalDettes.textContent = totalD.toFixed(2);
-        solde.textContent = (totalB - totalD).toFixed(2);
+        soldeEl.textContent = `Solde : ${solde} €`;
       });
-
-      window.deleteTransaction = async (id) => {
-        if (confirm("Supprimer cette ligne ?")) await deleteDoc(doc(db, "transactions", id));
-      };
-
-      window.editTransaction = (id, date, type, montant, description) => {
-        document.getElementById("date").value = date;
-        document.getElementById("type").value = type;
-        document.getElementById("montant").value = montant;
-        document.getElementById("description").value = description;
-        currentEditId = id;
-        financeForm.querySelector("button").textContent = "Modifier";
-      };
+    } else {
+      window.location.href = "login.html";
     }
-  </script></body>
+  });
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const montant = document.getElementById('montant').value;
+    const type = document.getElementById('type').value;
+    const description = document.getElementById('description').value;
+    const date = document.getElementById('date').value;
+
+    const data = { montant, type, description, date };
+
+    const path = `transactions/${currentUID}`;
+    db.ref(path).push(data).then(() => form.reset());
+  });
+</script>
+
+</body>
 </html>
