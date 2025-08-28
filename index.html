@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+      <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -107,7 +107,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, onSnapshot, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, onSnapshot, doc, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDOCmfhq0IImy7qs4o4ElLmbiS5IUuK00c",
@@ -266,7 +266,11 @@
     }
 
     function loadTransactions() {
-      const q = query(collection(db, "transactions"), where("uid", "==", viewingUid));
+      const q = query(
+        collection(db, "transactions"),
+        where("uid", "==", viewingUid),
+        orderBy("date", "desc") // tri par date décroissante
+      );
       onSnapshot(q, snapshot => {
         tableauBody.innerHTML = "";
         const data = [];
