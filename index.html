@@ -329,34 +329,45 @@
 
     // Export PDF
     exportPdfBtn.addEventListener('click', () => {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
-      doc.setFontSize(14);
-      doc.text("Suivi Financier", 14, 20);
+  doc.setFontSize(14);
+  doc.text("Suivi Financier", 14, 20);
 
-      const rows = [];
-      tableauBody.querySelectorAll("tr").forEach(tr => {
-        const row = [];
-        tr.querySelectorAll("td").forEach((td, i) => {
-          if(i < 4) row.push(td.textContent); // exclut la colonne actions
-        });
-        rows.push(row);
-      });
+  const rows = [];
+  let totalB = 0, totalD = 0;
 
-      if (rows.length === 0) {
-        alert("Aucune transaction à exporter !");
-        return;
-      }
+  tableauBody.querySelectorAll("tr").forEach(tr => {
+    const row = [];
+    const tds = tr.querySelectorAll("td");
+    row.push(tds[0].textContent); // Date
+    row.push(tds[1].textContent); // Type
+    row.push(tds[2].textContent); // Montant
+    row.push(tds[3].textContent); // Description
+    rows.push(row);
 
-      doc.autoTable({
-        head: [["Date", "Type", "Montant (F)", "Description"]],
-        body: rows,
-        startY: 30
-      });
+    // Calcul du solde
+    if(tds[1].textContent === "bénéfice") totalB += parseFloat(tds[2].textContent);
+    else totalD += parseFloat(tds[2].textContent);
+  });
 
-      doc.save("suivi_financier.pdf");
-    });
+  if (rows.length === 0) {
+    alert("Aucune transaction à exporter !");
+    return;
+  }
+
+  // Ajouter une ligne total à la fin
+  rows.push(["", "Solde total", (totalB - totalD).toFixed(2), ""]);
+
+  doc.autoTable({
+    head: [["Date", "Type", "Montant (F)", "Description"]],
+    body: rows,
+    startY: 30
+  });
+
+  doc.save("suivi_financier.pdf");
+});
 
   </script>
 </body>
