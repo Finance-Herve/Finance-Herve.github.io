@@ -1,4 +1,4 @@
-      <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -53,8 +53,11 @@
       background-color: #457b9d;
       margin-top: 10px;
     }
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   </style>
+
+  <!-- jsPDF et jsPDF-AutoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
   <div id="soldeDisplay">Solde : <span id="solde">0.00</span> F</div>
@@ -104,7 +107,6 @@
 
   <button id="exportPdf" class="hidden export-btn">Exporter PDF</button>
 
-  <!-- Firebase SDKs et Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
@@ -168,67 +170,66 @@
 
     logoutBtn.addEventListener('click', async () => {
       await signOut(auth);
-      profileDropdown.classList.remove('show');
+      profileDropdown.classList.remove("show");
     });
 
     backToMineBtn.addEventListener('click', () => {
       viewingUid = currentUser.uid;
       loadTransactions();
-      backToMineBtn.classList.add('hidden');
+      backToMineBtn.classList.add("hidden");
     });
 
     onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUser = user;
-    viewingUid = user.uid; // Affiche les transactions de l'admin par défaut
-    profileEmail.textContent = user.email;
-    profileSection.classList.remove("hidden");
-    document.querySelector('.auth').classList.add("hidden");
-    form.classList.remove("hidden");
-    tableau.classList.remove("hidden");
-    exportPdfBtn.classList.remove("hidden");
+      if (user) {
+        currentUser = user;
+        viewingUid = user.uid;
+        profileEmail.textContent = user.email;
+        profileSection.classList.remove("hidden");
+        document.querySelector('.auth').classList.add("hidden");
+        form.classList.remove("hidden");
+        tableau.classList.remove("hidden");
+        exportPdfBtn.classList.remove("hidden");
 
-    const isAdmin = user.email === "hervekpetonou4@gmail.com";
+        const isAdmin = user.email === "hervekpetonou4@gmail.com";
 
-    if (isAdmin) {
-      // Liste des utilisateurs
-      const q = await getDocs(collection(db, "transactions"));
-      const emailsMap = new Map();
-      q.forEach(docSnap => {
-        const data = docSnap.data();
-        if (data.uid && data.uid !== user.uid) {
-          emailsMap.set(data.uid, data.email || "Utilisateur inconnu");
+        if (isAdmin) {
+          // Liste des autres utilisateurs
+          const q = await getDocs(collection(db, "transactions"));
+          const emailsMap = new Map();
+          q.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data.uid && data.uid !== user.uid) {
+              emailsMap.set(data.uid, data.email || "Utilisateur inconnu");
+            }
+          });
+          userList.innerHTML = "<hr><strong>Utilisateurs :</strong><br>";
+          emailsMap.forEach((email, uid) => {
+            const el = document.createElement("div");
+            el.className = "user-link";
+            el.textContent = email;
+            el.onclick = () => {
+              viewingUid = uid;
+              loadTransactions();
+              backToMineBtn.classList.remove("hidden");
+            };
+            userList.appendChild(el);
+          });
+          userList.classList.remove("hidden");
         }
-      });
-      userList.innerHTML = "<hr><strong>Utilisateurs :</strong><br>";
-      emailsMap.forEach((email, uid) => {
-        const el = document.createElement("div");
-        el.className = "user-link";
-        el.textContent = email;
-        el.onclick = () => {
-          viewingUid = uid;
-          loadTransactions(); // charge les transactions de cet utilisateur
-          backToMineBtn.classList.remove("hidden");
-        };
-        userList.appendChild(el);
-      });
-      userList.classList.remove("hidden");
-    }
 
-    // ❗ Charger directement les transactions de l'utilisateur courant (admin ou employé)
-    loadTransactions();
-
-  } else {
-    currentUser = null;
-    profileSection.classList.add("hidden");
-    document.querySelector('.auth').classList.remove("hidden");
-    form.classList.add("hidden");
-    tableau.classList.add("hidden");
-    exportPdfBtn.classList.add("hidden");
-    tableauBody.innerHTML = "";
-    updateSoldeFromData([]);
-  }
-});
+        // Charger toutes les transactions du user courant (ou admin)
+        loadTransactions();
+      } else {
+        currentUser = null;
+        profileSection.classList.add("hidden");
+        document.querySelector('.auth').classList.remove("hidden");
+        form.classList.add("hidden");
+        tableau.classList.add("hidden");
+        exportPdfBtn.classList.add("hidden");
+        tableauBody.innerHTML = "";
+        updateSoldeFromData([]);
+      }
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -274,7 +275,7 @@
       const q = query(
         collection(db, "transactions"),
         where("uid", "==", viewingUid),
-        orderBy("date", "desc") // tri par date décroissante
+        orderBy("date", "desc")
       );
       onSnapshot(q, snapshot => {
         tableauBody.innerHTML = "";
@@ -325,35 +326,38 @@
     }
 
     document.getElementById('date').valueAsDate = new Date();
-        exportPdfBtn.addEventListener('click', () => {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
 
-  doc.setFontSize(14);
-  doc.text("Suivi Financier", 14, 20);
+    // Export PDF
+    exportPdfBtn.addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
 
-  const rows = [];
-  tableauBody.querySelectorAll("tr").forEach(tr => {
-    const row = [];
-    tr.querySelectorAll("td").forEach(td => {
-      row.push(td.textContent);
+      doc.setFontSize(14);
+      doc.text("Suivi Financier", 14, 20);
+
+      const rows = [];
+      tableauBody.querySelectorAll("tr").forEach(tr => {
+        const row = [];
+        tr.querySelectorAll("td").forEach((td, i) => {
+          if(i < 4) row.push(td.textContent); // exclut la colonne actions
+        });
+        rows.push(row);
+      });
+
+      if (rows.length === 0) {
+        alert("Aucune transaction à exporter !");
+        return;
+      }
+
+      doc.autoTable({
+        head: [["Date", "Type", "Montant (F)", "Description"]],
+        body: rows,
+        startY: 30
+      });
+
+      doc.save("suivi_financier.pdf");
     });
-    rows.push(row);
-  });
 
-  if (rows.length === 0) {
-    alert("Aucune transaction à exporter !");
-    return;
-  }
-
-  doc.autoTable({
-    head: [["Date", "Type", "Montant (F)", "Description"]],
-    body: rows,
-    startY: 30
-  });
-
-  doc.save("suivi_financier.pdf");
-});
   </script>
 </body>
 </html>
