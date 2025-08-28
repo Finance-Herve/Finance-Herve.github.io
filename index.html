@@ -102,7 +102,7 @@
   </table>
 
   <button id="exportPdf" class="hidden export-btn">Exporter PDF</button>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <!-- Firebase SDKs et Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
@@ -324,6 +324,35 @@
     }
 
     document.getElementById('date').valueAsDate = new Date();
+        exportPdfBtn.addEventListener('click', () => {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(14);
+  doc.text("Suivi Financier", 14, 20);
+
+  const rows = [];
+  tableauBody.querySelectorAll("tr").forEach(tr => {
+    const row = [];
+    tr.querySelectorAll("td").forEach(td => {
+      row.push(td.textContent);
+    });
+    rows.push(row);
+  });
+
+  if (rows.length === 0) {
+    alert("Aucune transaction à exporter !");
+    return;
+  }
+
+  doc.autoTable({
+    head: [["Date", "Type", "Montant (F)", "Description"]],
+    body: rows,
+    startY: 30
+  });
+
+  doc.save("suivi_financier.pdf");
+});
   </script>
 </body>
 </html>
