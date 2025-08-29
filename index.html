@@ -178,57 +178,64 @@
       loadTransactions();
       backToMineBtn.classList.add("hidden");
     });
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    profileEmail.textContent = user.email;
+    profileSection.classList.remove("hidden");
+    document.querySelector('.auth').classList.add("hidden");
+    form.classList.remove("hidden");
+    tableau.classList.remove("hidden");
+    exportPdfBtn.classList.remove("hidden");
 
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        viewingUid = user.uid;
-        profileEmail.textContent = user.email;
-        profileSection.classList.remove("hidden");
-        document.querySelector('.auth').classList.add("hidden");
-        form.classList.remove("hidden");
-        tableau.classList.remove("hidden");
-        exportPdfBtn.classList.remove("hidden");
+    const isAdmin = user.email === "hervekpetonou4@gmail.com";
 
-        const isAdmin = user.email === "hervekpetonou4@gmail.com";
-
-        if (isAdmin) {
-          // Liste des autres utilisateurs
-          const q = await getDocs(collection(db, "transactions"));
-          const emailsMap = new Map();
-          q.forEach(docSnap => {
-            const data = docSnap.data();
-            if (data.uid && data.uid !== user.uid) {
-              emailsMap.set(data.uid, data.email || "Utilisateur inconnu");
-            }
-          });
-          userList.innerHTML = "<hr><strong>Utilisateurs :</strong><br>";
-          emailsMap.forEach((email, uid) => {
-            const el = document.createElement("div");
-            el.className = "user-link";
-            el.textContent = email;
-            el.onclick = () => {
-              viewingUid = uid;
-              loadTransactions();
-              backToMineBtn.classList.remove("hidden");
-            };
-            userList.appendChild(el);
-          });
-          userList.classList.remove("hidden");
+    if (isAdmin) {
+      viewingUid = user.uid; // par défaut sur ses données
+      // Liste des autres utilisateurs
+      const q = await getDocs(collection(db, "transactions"));
+      const emailsMap = new Map();
+      q.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.uid && data.uid !== user.uid) {
+          emailsMap.set(data.uid, data.email || "Utilisateur inconnu");
         }
+      });
+      userList.innerHTML = "<hr><strong>Utilisateurs :</strong><br>";
+      emailsMap.forEach((email, uid) => {
+        const el = document.createElement("div");
+        el.className = "user-link";
+        el.textContent = email;
+        el.onclick = () => {
+          viewingUid = uid;   // admin peut changer
+          loadTransactions();
+          backToMineBtn.classList.remove("hidden");
+        };
+        userList.appendChild(el);
+      });
+      userList.classList.remove("hidden");
+    } else {
+      // 🚨 Utilisateur simple : il ne voit QUE ses données
+      viewingUid = user.uid;
+      userList.classList.add("hidden");
+      backToMineBtn.classList.add("hidden");
+    }
 
-        // Charger toutes les transactions du user courant (ou admin)
-        loadTransactions();
-      } else {
-        currentUser = null;
-        profileSection.classList.add("hidden");
-        document.querySelector('.auth').classList.remove("hidden");
-        form.classList.add("hidden");
-        tableau.classList.add("hidden");
-        exportPdfBtn.classList.add("hidden");
-        tableauBody.innerHTML = "";
-        updateSoldeFromData([]);
-      }
+    // Charger les transactions du bon utilisateur
+    loadTransactions();
+
+  } else {
+    // Déconnexion
+    currentUser = null;
+    profileSection.classList.add("hidden");
+    document.querySelector('.auth').classList.remove("hidden");
+    form.classList.add("hidden");
+    tableau.classList.add("hidden");
+    exportPdfBtn.classList.add("hidden");
+    tableauBody.innerHTML = "";
+    updateSoldeFromData([]);
+  }
+
     });
 
     form.addEventListener('submit', async (e) => {
