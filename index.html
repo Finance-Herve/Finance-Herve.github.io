@@ -103,13 +103,15 @@
 
   <button id="exportPdf" class="hidden export-btn">Exporter PDF</button>
 
-  <!-- Firebase SDK + jsPDF -->
+  <!-- jsPDF + AutoTable pour un PDF comme la capture -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Firebase SDKs et Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, onSnapshot, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
-    import jsPDF from "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-    import autoTable from "https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.23/dist/jspdf.plugin.autotable.min.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDOCmfhq0IImy7qs4o4ElLmbiS5IUuK00c",
@@ -146,7 +148,9 @@
     let currentEditId = null;
     let currentUser = null;
     let viewingUid = null;
-    let unsubscribe = null;
+
+    // Garder une copie des données affichées pour le PDF
+    let currentData = [];
 
     profileLink.addEventListener('click', () => {
       profileDropdown.classList.toggle('show');
@@ -169,7 +173,6 @@
     });
 
     logoutBtn.addEventListener('click', async () => {
-      if (unsubscribe) unsubscribe(); // stop live updates
       await signOut(auth);
       profileDropdown.classList.remove('show');
     });
@@ -192,7 +195,7 @@
         exportPdfBtn.classList.remove("hidden");
         loadTransactions();
 
-        // Charger utilisateurs si admin
+        // Charger les autres utilisateurs si admin (inchangé)
         const isAdmin = user.email === "hervekpetonou4@gmail.com";
         if (isAdmin) {
           const q = await getDocs(collection(db, "transactions"));
@@ -269,11 +272,10 @@
       soldeDisplay.textContent = `${(totalB - totalD).toFixed(2)}`;
     }
 
+    // ===== TRI PAR DATE DÉCROISSANTE + AFFICHAGE =====
     function loadTransactions() {
-      if (unsubscribe) unsubscribe();
       const q = query(collection(db, "transactions"), where("uid", "==", viewingUid));
-      unsubscribe = onSnapshot(q, snapshot => {
-        tableauBody.innerHTML = "";
+      onSnapshot(q, snapshot => {
         const data = [];
         snapshot.forEach(docSnap => {
           const item = docSnap.data();
@@ -281,16 +283,19 @@
           data.push(item);
         });
 
-        // Trier par date décroissante
-        data.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Tri ISO YYYY-MM-DD : lexicographique OK pour décroissant
+        data.sort((a, b) => b.date.localeCompare(a.date));
+        currentData = data.slice(); // garder pour PDF
 
+        // (ré)afficher le tableau
+        tableauBody.innerHTML = "";
         data.forEach(item => {
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${item.date}</td>
             <td>${item.type}</td>
             <td>${item.montant.toFixed(2)}</td>
-            <td>${item.description}</td>
+            <td>${item.description || ""}</td>
             <td class="actions">
               <button class="btn-edit" data-id="${item.id}">Modifier</button>
               <button class="btn-delete" data-id="${item.id}">Supprimer</button>
@@ -308,7 +313,7 @@
             document.getElementById('date').value = item.date;
             document.getElementById('type').value = item.type;
             document.getElementById('montant').value = item.montant;
-            document.getElementById('description').value = item.description;
+            document.getElementById('description').value = item.description || "";
             submitBtn.textContent = "Modifier";
             cancelBtn.classList.remove("hidden");
             form.scrollIntoView({ behavior: 'smooth' });
@@ -322,41 +327,48 @@
             }
           };
         });
-
-        // PDF
-        exportPdfBtn.onclick = () => {
-          const { jsPDF } = window.jspdf;
-          const doc = new jsPDF();
-
-          doc.text("Suivi Financier", 14, 20);
-
-          const rows = data.map(item => [
-            item.date,
-            item.type,
-            item.montant.toFixed(2),
-            item.description
-          ]);
-
-          let totalB = 0, totalD = 0;
-          data.forEach(item => {
-            if (item.type === 'bénéfice') totalB += item.montant;
-            else totalD += item.montant;
-          });
-          const soldeTotal = (totalB - totalD).toFixed(2);
-
-          rows.push(["", "Solde total", soldeTotal, ""]);
-
-          doc.autoTable({
-            head: [["Date", "Type", "Montant (F)", "Description"]],
-            body: rows,
-            startY: 30,
-            theme: "grid"
-          });
-
-          doc.save("suivi_financier.pdf");
-        };
       });
     }
+
+    // ===== EXPORT PDF comme la capture =====
+    exportPdfBtn.addEventListener("click", () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Titre
+      doc.setFontSize(14);
+      doc.text("Suivi Financier", 14, 18);
+
+      // Préparer lignes (ordre déjà décroissant via currentData)
+      const body = currentData.map(item => [
+        item.date,
+        item.type,
+        item.montant.toFixed(2),
+        item.description || ""
+      ]);
+
+      // Calcul solde total
+      let totalB = 0, totalD = 0;
+      currentData.forEach(it => {
+        if (it.type === 'bénéfice') totalB += it.montant; else totalD += it.montant;
+      });
+      const soldeTotal = (totalB - totalD).toFixed(2);
+
+      // Ligne finale "Solde total" comme sur la capture
+      body.push(["", "Solde total", soldeTotal, ""]);
+
+      // Tableau
+      doc.autoTable({
+        head: [["Date", "Type", "Montant (F)", "Description"]],
+        body,
+        startY: 26,
+        theme: "grid",
+        headStyles: { fillColor: [78, 163, 216] }, // bleu doux
+        styles: { cellPadding: 3, fontSize: 10 }
+      });
+
+      doc.save("suivi_financier.pdf");
+    });
 
     document.getElementById('date').valueAsDate = new Date();
   </script>
