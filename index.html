@@ -331,49 +331,54 @@
     }
 
     // ===== EXPORT PDF comme la capture =====
-    exportPdfBtn.addEventListener("click", () => {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+exportPdfBtn.addEventListener("click", () => {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
-      // Titre
-      doc.setFontSize(14);
-      doc.text("Suivi Financier", 14, 18);
+  // Titre
+  doc.setFontSize(14);
+  doc.text("Suivi Financier", 14, 18);
 
-      // Email en haut du PDF
-  doc.text("Utilisateur : " + email, 20, 20);
-      
-      // Préparer lignes (ordre déjà décroissant via currentData)
-      const body = currentData.map(item => [
-        item.date,
-        item.type,
-        item.montant.toFixed(2),
-        item.description || ""
-      ]);
+  // 🔹 Ajouter le nom/email Gmail de l'utilisateur connecté
+  // suppose que l'email est stocké dans currentUser.email
+  if (currentUser && currentUser.email) {
+    doc.setFontSize(11);
+    doc.text("Utilisateur : " + currentUser.email, 14, 25);
+  }
 
-      // Calcul solde total
-      let totalB = 0, totalD = 0;
-      currentData.forEach(it => {
-        if (it.type === 'bénéfice') totalB += it.montant; else totalD += it.montant;
-      });
-      const soldeTotal = (totalB - totalD).toFixed(2);
+  // Préparer lignes (ordre déjà décroissant via currentData)
+  const body = currentData.map(item => [
+    item.date,
+    item.type,
+    item.montant.toFixed(2),
+    item.description || ""
+  ]);
 
-      // Ligne finale "Solde total" comme sur la capture
-      body.push(["", "Solde total", soldeTotal, ""]);
+  // Calcul solde total
+  let totalB = 0, totalD = 0;
+  currentData.forEach(it => {
+    if (it.type === 'bénéfice') totalB += it.montant; else totalD += it.montant;
+  });
+  const soldeTotal = (totalB - totalD).toFixed(2);
 
-      // Tableau
-      doc.autoTable({
-        head: [["Date", "Type", "Montant (F)", "Description"]],
-        body,
-        startY: 26,
-        theme: "grid",
-        headStyles: { fillColor: [78, 163, 216] }, // bleu doux
-        styles: { cellPadding: 3, fontSize: 10 }
-      });
+  // Ligne finale "Solde total" comme sur la capture
+  body.push(["", "Solde total", soldeTotal, ""]);
 
-      doc.save("suivi_financier.pdf");
-    });
+  // Tableau
+  doc.autoTable({
+    head: [["Date", "Type", "Montant (F)", "Description"]],
+    body,
+    // 🔹 Décale un peu le tableau plus bas si tu affiches l'email
+    startY: currentUser && currentUser.email ? 32 : 26,
+    theme: "grid",
+    headStyles: { fillColor: [78, 163, 216] }, // bleu doux
+    styles: { cellPadding: 3, fontSize: 10 }
+  });
 
-    document.getElementById('date').valueAsDate = new Date();
+  doc.save("suivi_financier.pdf");
+});
+
+document.getElementById('date').valueAsDate = new Date();
   </script>
-</body>
+  </body>
 </html>
