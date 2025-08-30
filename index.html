@@ -103,11 +103,14 @@
 
   <button id="exportPdf" class="hidden export-btn">Exporter PDF</button>
 
+  <!-- Librairie jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <!-- Firebase SDKs et Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, onSnapshot, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, onSnapshot, doc, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDOCmfhq0IImy7qs4o4ElLmbiS5IUuK00c",
@@ -144,6 +147,7 @@
     let currentEditId = null;
     let currentUser = null;
     let viewingUid = null;
+    let currentData = [];
 
     profileLink.addEventListener('click', () => {
       profileDropdown.classList.toggle('show');
@@ -157,7 +161,7 @@
 
     loginBtn.addEventListener('click', async () => {
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+        await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
         emailInput.value = "";
         passwordInput.value = "";
       } catch (error) {
@@ -266,14 +270,18 @@
     }
 
     function loadTransactions() {
-      const q = query(collection(db, "transactions"), where("uid", "==", viewingUid));
+      const q = query(
+        collection(db, "transactions"),
+        where("uid", "==", viewingUid),
+        orderBy("date", "desc") // ✅ Trie par date décroissante
+      );
       onSnapshot(q, snapshot => {
         tableauBody.innerHTML = "";
-        const data = [];
+        currentData = [];
         snapshot.forEach(docSnap => {
           const item = docSnap.data();
           item.id = docSnap.id;
-          data.push(item);
+          currentData.push(item);
 
           const row = document.createElement("tr");
           row.innerHTML = `
@@ -289,11 +297,11 @@
           tableauBody.appendChild(row);
         });
 
-        updateSoldeFromData(data);
+        updateSoldeFromData(currentData);
 
         document.querySelectorAll(".btn-edit").forEach(btn => {
           btn.onclick = () => {
-            const item = data.find(x => x.id === btn.dataset.id);
+            const item = currentData.find(x => x.id === btn.dataset.id);
             currentEditId = item.id;
             document.getElementById('date').value = item.date;
             document.getElementById('type').value = item.type;
@@ -314,6 +322,32 @@
         });
       });
     }
+
+    // ✅ Export PDF avec solde en bas
+    exportPdfBtn.addEventListener("click", () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(16);
+      doc.text("Rapport financier", 10, 10);
+
+      let y = 20;
+      doc.setFontSize(12);
+      doc.text("Date       Type       Montant(F)       Description", 10, y);
+      y += 10;
+
+      currentData.forEach(item => {
+        const line = `${item.date}   ${item.type}   ${item.montant.toFixed(2)}   ${item.description}`;
+        doc.text(line, 10, y);
+        y += 10;
+      });
+
+      y += 10;
+      doc.setFontSize(14);
+      doc.text(`Solde actuel : ${soldeDisplay.textContent} F`, 10, y);
+
+      doc.save("transactions.pdf");
+    });
 
     document.getElementById('date').valueAsDate = new Date();
   </script>
