@@ -339,6 +339,9 @@
       doc.setFontSize(14);
       doc.text("Suivi Financier", 14, 18);
 
+      // Email en haut du PDF
+  doc.text("Utilisateur : " + email, 20, 20);
+      
       // Préparer lignes (ordre déjà décroissant via currentData)
       const body = currentData.map(item => [
         item.date,
