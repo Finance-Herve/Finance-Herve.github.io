@@ -54,10 +54,6 @@
       margin-top: 10px;
     }
   </style>
-
-  <!-- jsPDF et jsPDF-AutoTable -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
   <div id="soldeDisplay">Solde : <span id="solde">0.00</span> F</div>
@@ -107,10 +103,11 @@
 
   <button id="exportPdf" class="hidden export-btn">Exporter PDF</button>
 
+  <!-- Firebase SDKs et Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, onSnapshot, doc, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, onSnapshot, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDOCmfhq0IImy7qs4o4ElLmbiS5IUuK00c",
@@ -170,72 +167,62 @@
 
     logoutBtn.addEventListener('click', async () => {
       await signOut(auth);
-      profileDropdown.classList.remove("show");
+      profileDropdown.classList.remove('show');
     });
 
     backToMineBtn.addEventListener('click', () => {
       viewingUid = currentUser.uid;
       loadTransactions();
-      backToMineBtn.classList.add("hidden");
+      backToMineBtn.classList.add('hidden');
     });
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUser = user;
-    profileEmail.textContent = user.email;
-    profileSection.classList.remove("hidden");
-    document.querySelector('.auth').classList.add("hidden");
-    form.classList.remove("hidden");
-    tableau.classList.remove("hidden");
-    exportPdfBtn.classList.remove("hidden");
 
-    const isAdmin = user.email === "hervekpetonou4@gmail.com";
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        viewingUid = user.uid;
+        profileEmail.textContent = user.email;
+        profileSection.classList.remove("hidden");
+        document.querySelector('.auth').classList.add("hidden");
+        form.classList.remove("hidden");
+        tableau.classList.remove("hidden");
+        exportPdfBtn.classList.remove("hidden");
+        loadTransactions();
 
-    if (isAdmin) {
-      viewingUid = user.uid; // par défaut sur ses données
-      // Liste des autres utilisateurs
-      const q = await getDocs(collection(db, "transactions"));
-      const emailsMap = new Map();
-      q.forEach(docSnap => {
-        const data = docSnap.data();
-        if (data.uid && data.uid !== user.uid) {
-          emailsMap.set(data.uid, data.email || "Utilisateur inconnu");
+        // Charger les autres utilisateurs si admin
+        const isAdmin = user.email === "hervekpetonou4@gmail.com";
+        if (isAdmin) {
+          const q = await getDocs(collection(db, "transactions"));
+          const emailsMap = new Map();
+          q.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data.uid && data.uid !== user.uid) {
+              emailsMap.set(data.uid, data.email || "Utilisateur inconnu");
+            }
+          });
+          userList.innerHTML = "<hr><strong>Utilisateurs :</strong><br>";
+          emailsMap.forEach((email, uid) => {
+            const el = document.createElement("div");
+            el.className = "user-link";
+            el.textContent = email;
+            el.onclick = () => {
+              viewingUid = uid;
+              loadTransactions();
+              backToMineBtn.classList.remove("hidden");
+            };
+            userList.appendChild(el);
+          });
+          userList.classList.remove("hidden");
         }
-      });
-      userList.innerHTML = "<hr><strong>Utilisateurs :</strong><br>";
-      emailsMap.forEach((email, uid) => {
-        const el = document.createElement("div");
-        el.className = "user-link";
-        el.textContent = email;
-        el.onclick = () => {
-          viewingUid = uid;   // admin peut changer
-          loadTransactions();
-          backToMineBtn.classList.remove("hidden");
-        };
-        userList.appendChild(el);
-      });
-      userList.classList.remove("hidden");
-    } else {
-      // 🚨 Utilisateur simple : il ne voit QUE ses données
-      viewingUid = user.uid;
-      userList.classList.add("hidden");
-      backToMineBtn.classList.add("hidden");
-    }
-
-    // Charger les transactions du bon utilisateur
-    loadTransactions();
-
-  } else {
-    // Déconnexion
-    currentUser = null;
-    profileSection.classList.add("hidden");
-    document.querySelector('.auth').classList.remove("hidden");
-    form.classList.add("hidden");
-    tableau.classList.add("hidden");
-    exportPdfBtn.classList.add("hidden");
-    tableauBody.innerHTML = "";
-    updateSoldeFromData([]);
-  }
-
+      } else {
+        currentUser = null;
+        profileSection.classList.add("hidden");
+        document.querySelector('.auth').classList.remove("hidden");
+        form.classList.add("hidden");
+        tableau.classList.add("hidden");
+        exportPdfBtn.classList.add("hidden");
+        tableauBody.innerHTML = "";
+        updateSoldeFromData([]);
+      }
     });
 
     form.addEventListener('submit', async (e) => {
@@ -279,11 +266,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     function loadTransactions() {
-      const q = query(
-        collection(db, "transactions"),
-        where("uid", "==", viewingUid),
-        orderBy("date", "desc")
-      );
+      const q = query(collection(db, "transactions"), where("uid", "==", viewingUid));
       onSnapshot(q, snapshot => {
         tableauBody.innerHTML = "";
         const data = [];
@@ -333,49 +316,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     document.getElementById('date').valueAsDate = new Date();
-
-    // Export PDF
-    exportPdfBtn.addEventListener('click', () => {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  doc.setFontSize(14);
-  doc.text("Suivi Financier", 14, 20);
-
-  const rows = [];
-  let totalB = 0, totalD = 0;
-
-  tableauBody.querySelectorAll("tr").forEach(tr => {
-    const row = [];
-    const tds = tr.querySelectorAll("td");
-    row.push(tds[0].textContent); // Date
-    row.push(tds[1].textContent); // Type
-    row.push(tds[2].textContent); // Montant
-    row.push(tds[3].textContent); // Description
-    rows.push(row);
-
-    // Calcul du solde
-    if(tds[1].textContent === "bénéfice") totalB += parseFloat(tds[2].textContent);
-    else totalD += parseFloat(tds[2].textContent);
-  });
-
-  if (rows.length === 0) {
-    alert("Aucune transaction à exporter !");
-    return;
-  }
-
-  // Ajouter une ligne total à la fin
-  rows.push(["", "Solde total", (totalB - totalD).toFixed(2), ""]);
-
-  doc.autoTable({
-    head: [["Date", "Type", "Montant (F)", "Description"]],
-    body: rows,
-    startY: 30
-  });
-
-  doc.save("suivi_financier.pdf");
-});
-
   </script>
 </body>
 </html>
