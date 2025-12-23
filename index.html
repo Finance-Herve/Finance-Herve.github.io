@@ -1,209 +1,368 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Suivi Financier</title>
+<!DOCTYPE html>  <html lang="fr">  
+<head>  
+  <meta charset="UTF-8" />  
+  <title>Suivi Financier</title>  
+  <style>  
+    body { font-family: Arial, sans-serif; margin: 20px; }  
+    #soldeDisplay {  
+      position: fixed; top: 20px; left: 20px;  
+      background: #b7e4c7; padding: 10px 15px;  
+      border-radius: 5px; font-weight: bold;  
+    }  
+    .auth, form, table { margin-top: 80px; max-width: 800px; }  
+    input, select { margin: 5px; padding: 8px; border-radius: 4px; }  
+    button { padding: 8px 15px; background: #2d6a4f; color: #fff; border: none; border-radius: 4px; cursor: pointer; }  
+    #cancelBtn { background-color: #e63946; }  
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }  
+    th, td { border: 1px solid #ddd; padding: 8px; }  
+    th { background-color: #b7e4c7; }  
+    .actions { display: flex; gap: 5px; }  
+    .btn-edit { background-color: #ffd166; }  
+    .btn-delete { background-color: #ef476f; color: #fff; }  
+    .hidden { display: none; }  
+    .profile-section {  
+      position: fixed; top: 20px; right: 20px;  
+      background: #f1f1f1; padding: 10px;  
+      border-radius: 5px;  
+    }  
+    .profile-link {  
+      cursor: pointer;  
+      color: #2d6a4f;  
+      font-weight: bold;  
+    }  
+    .profile-dropdown {  
+      display: none;  
+      position: absolute;  
+      right: 0;  
+      background: white;  
+      border: 1px solid #ddd;  
+      border-radius: 5px;  
+      padding: 10px;  
+      min-width: 220px;  
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);  
+      z-index: 1;  
+    }  
+    .profile-dropdown.show { display: block; }  
+    .export-btn { background: #4a4e69; margin-top: 20px; }  
+    .user-link {  
+      color: #1d3557; cursor: pointer;  
+      display: block; margin-top: 5px;  
+    }  
+    #backToMine {  
+      background-color: #457b9d;  
+      margin-top: 10px;  
+    }  
+  </style>  
+</head>  
+<body>  
+  <div id="soldeDisplay">Solde : <span id="solde">0.00</span> F</div>    <div class="profile-section hidden" id="profileSection">  
+    <span class="profile-link" id="profileLink">Profil</span>  
+    <div class="profile-dropdown" id="profileDropdown">  
+      <div id="profileEmail"></div>  
+      <div id="userList" class="hidden"></div>  
+      <button id="backToMine" class="hidden">Mes fichiers</button>  
+      <button id="logoutBtn">Déconnexion</button>  
+    </div>  
+  </div>    <div class="auth">  
+    <h2>Connexion</h2>  
+    <input type="email" id="email" placeholder="Email">  
+    <input type="password" id="password" placeholder="Mot de passe">  
+    <button id="loginBtn">Connexion</button>  
+  </div>    <form id="financeForm" class="hidden">  
+    <h2>Ajoutez une transaction</h2>  
+    <input type="date" id="date" required>  
+    <select id="type" required>  
+      <option value="bénéfice">Bénéfice</option>  
+      <option value="dette">Dette</option>  
+    </select>  
+    <input type="number" id="montant" placeholder="Montant (F)" step="0.01" required>  
+    <input type="text" id="description" placeholder="Description">  
+    <button type="submit" id="submitBtn">Ajouter</button>  
+    <button type="button" id="cancelBtn" class="hidden">Annuler</button>  
+  </form>    <table id="tableau" class="hidden">  
+    <thead>  
+      <tr>  
+        <th>Date</th>  
+        <th>Type</th>  
+        <th>Montant (F)</th>  
+        <th>Description</th>  
+        <th>Actions</th>  
+      </tr>  
+    </thead>  
+    <tbody></tbody>  
+  </table>  <button id="exportPdf" class="hidden export-btn">Exporter PDF</button>
 
-<style>
-body { font-family: Arial, sans-serif; margin: 20px; }
-#soldeDisplay {
-  position: fixed; top: 20px; left: 20px;
-  background: #b7e4c7; padding: 10px;
-  border-radius: 5px; font-weight: bold;
-}
-.auth, form, table { margin-top: 90px; max-width: 900px; }
-input, select { padding: 8px; margin: 5px; }
-button { padding: 6px 12px; cursor: pointer; }
-.hidden { display: none; }
-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th, td { border: 1px solid #ccc; padding: 6px; }
-th { background: #d8f3dc; }
-.actions { display: flex; gap: 5px; }
-.month-header {
-  background: #edf6f9;
-  font-weight: bold;
-  cursor: pointer;
-}
-.download-btn {
-  float: right;
-  background: #457b9d;
-  color: white;
-  border: none;
-}
-</style>
-</head>
-
-<body>
-
-<div id="soldeDisplay">Solde : <span id="solde">0.00</span> F</div>
-
-<div class="auth">
-  <h3>Connexion</h3>
-  <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Mot de passe">
-  <button id="loginBtn">Connexion</button>
-</div>
-
-<form id="financeForm" class="hidden">
-  <h3>Ajouter une transaction</h3>
-  <input type="date" id="date" required>
-  <select id="type">
-    <option value="bénéfice">Bénéfice</option>
-    <option value="dette">Dette</option>
-  </select>
-  <input type="number" id="montant" placeholder="Montant">
-  <input type="text" id="description" placeholder="Description">
-  <button type="submit">Ajouter</button>
-</form>
-
-<table id="tableau" class="hidden">
-<thead>
-<tr>
-  <th>Date</th>
-  <th>Type</th>
-  <th>Montant</th>
-  <th>Description</th>
-  <th>Actions</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDOCmfhq0IImy7qs4o4ElLmbiS5IUuK00c",
-  authDomain: "finances-a44b6.firebaseapp.com",
-  projectId: "finances-a44b6"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getFirestore(app);
-
-const soldeEl = document.getElementById("solde");
-const body = document.querySelector("#tableau tbody");
-const table = document.getElementById("tableau");
-const form = document.getElementById("financeForm");
-
-let currentUser = null;
-let currentData = [];
-
-function monthKey(d){ return d.slice(0,7); }
-function monthLabel(k){
-  const m=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-  const [y,mo]=k.split("-");
-  return `Mois de ${m[mo-1]} ${y}`;
-}
-function yearKey(d){ return d.slice(0,4); }
-
-function solde(data){
-  let b=0,d=0;
-  data.forEach(i=> i.type==="bénéfice"?b+=i.montant:d+=i.montant);
-  return (b-d).toFixed(2);
-}
-
-document.getElementById("loginBtn").onclick=()=>{
-  signInWithEmailAndPassword(auth,email.value,password.value);
-};
-
-onAuthStateChanged(auth,user=>{
-  if(!user) return;
-  currentUser=user;
-  document.querySelector(".auth").classList.add("hidden");
-  form.classList.remove("hidden");
-  table.classList.remove("hidden");
-
-  const q=query(collection(db,"transactions"),where("uid","==",user.uid));
-  onSnapshot(q,snap=>{
-    const grouped={};
-    currentData=[];
-    snap.forEach(d=>{
-      const i=d.data();
-      currentData.push(i);
-      const k=monthKey(i.date);
-      if(!grouped[k]) grouped[k]=[];
-      grouped[k].push(i);
-    });
-
-    body.innerHTML="";
-    Object.keys(grouped).sort().reverse().forEach(k=>{
-      const data=grouped[k];
-      const s=solde(data);
-
-      const header=document.createElement("tr");
-      header.className="month-header";
-      header.innerHTML=`
-        <td colspan="5">
-          ${monthLabel(k)} — Solde : ${s} F
-          <button class="download-btn" onclick="downloadMonth('${k}')">⬇️ Mois</button>
-          <button class="download-btn" onclick="downloadYear('${k.slice(0,4)}')">⬇️ Année</button>
-        </td>`;
-      body.appendChild(header);
-
-      data.forEach(i=>{
-        const r=document.createElement("tr");
-        r.className="hidden m-"+k;
-        r.innerHTML=`
-          <td>${i.date}</td>
-          <td>${i.type}</td>
-          <td>${i.montant}</td>
-          <td>${i.description||""}</td>
-          <td>-</td>`;
-        body.appendChild(r);
-      });
-
-      header.onclick=()=>{
-        document.querySelectorAll(".m-"+k).forEach(r=>r.classList.toggle("hidden"));
-      };
-    });
-
-    if(currentData.length) soldeEl.textContent=solde(currentData);
-  });
-});
-
-form.onsubmit=e=>{
-  e.preventDefault();
-  addDoc(collection(db,"transactions"),{
-    uid:currentUser.uid,
-    date:date.value,
-    type:type.value,
-    montant:+montant.value,
-    description:description.value
-  });
-  form.reset();
-};
-
-window.downloadMonth=(k)=>{
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF();
-  const d=currentData.filter(i=>monthKey(i.date)===k);
-  doc.text(monthLabel(k),14,15);
-  doc.autoTable({
-    head:[["Date","Type","Montant","Description"]],
-    body:d.map(i=>[i.date,i.type,i.montant,i.description||""])
-  });
-  doc.save("Mois_"+k+".pdf");
-};
-
-window.downloadYear=(y)=>{
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF();
-  const d=currentData.filter(i=>yearKey(i.date)===y);
-  doc.text("Année "+y,14,15);
-  doc.autoTable({
-    head:[["Date","Type","Montant","Description"]],
-    body:d.map(i=>[i.date,i.type,i.montant,i.description||""])
-  });
-  doc.save("Annee_"+y+".pdf");
-};
-</script>
-
-</body>
+  <!-- jsPDF + AutoTable pour un PDF comme la capture -->    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>    <!-- Firebase SDKs et Script -->    <script type="module">  
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";  
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";  
+    import { getFirestore, collection, addDoc, getDocs, onSnapshot, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";  
+  
+    const firebaseConfig = {  
+      apiKey: "AIzaSyDOCmfhq0IImy7qs4o4ElLmbiS5IUuK00c",  
+      authDomain: "finances-a44b6.firebaseapp.com",  
+      projectId: "finances-a44b6",  
+      storageBucket: "finances-a44b6.appspot.com",  
+      messagingSenderId: "209247535782",  
+      appId: "1:209247535782:web:3781f9382199b29365ea67"  
+    };  
+  
+    const app = initializeApp(firebaseConfig);  
+    const auth = getAuth();  
+    const db = getFirestore(app);  
+  
+    const loginBtn = document.getElementById('loginBtn');  
+    const logoutBtn = document.getElementById('logoutBtn');  
+    const emailInput = document.getElementById('email');  
+    const passwordInput = document.getElementById('password');  
+    const profileLink = document.getElementById('profileLink');  
+    const profileDropdown = document.getElementById('profileDropdown');  
+    const profileEmail = document.getElementById('profileEmail');  
+    const profileSection = document.getElementById('profileSection');  
+    const userList = document.getElementById('userList');  
+    const backToMineBtn = document.getElementById('backToMine');  
+  
+    const form = document.getElementById('financeForm');  
+    const tableauBody = document.querySelector('#tableau tbody');  
+    const soldeDisplay = document.getElementById('solde');  
+    const submitBtn = document.getElementById('submitBtn');  
+    const cancelBtn = document.getElementById('cancelBtn');  
+    const tableau = document.getElementById('tableau');  
+    const exportPdfBtn = document.getElementById('exportPdf');  
+  
+    let currentEditId = null;  
+    let currentUser = null;  
+    let viewingUid = null;  
+  
+    // Garder une copie des données affichées pour le PDF  
+    let currentData = [];  
+  
+    profileLink.addEventListener('click', () => {  
+      profileDropdown.classList.toggle('show');  
+    });  
+  
+    window.addEventListener('click', (e) => {  
+      if (!e.target.closest('.profile-section')) {  
+        profileDropdown.classList.remove('show');  
+      }  
+    });  
+  
+    loginBtn.addEventListener('click', async () => {  
+      try {  
+        await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);  
+        emailInput.value = "";  
+        passwordInput.value = "";  
+      } catch (error) {  
+        alert("Erreur de connexion : " + error.message);  
+      }  
+    });  
+  
+    logoutBtn.addEventListener('click', async () => {  
+      await signOut(auth);  
+      profileDropdown.classList.remove('show');  
+    });  
+  
+    backToMineBtn.addEventListener('click', () => {  
+      viewingUid = currentUser.uid;  
+      loadTransactions();  
+      backToMineBtn.classList.add('hidden');  
+    });  
+  
+    onAuthStateChanged(auth, async (user) => {  
+      if (user) {  
+        currentUser = user;  
+        viewingUid = user.uid;  
+        profileEmail.textContent = user.email;  
+        profileSection.classList.remove("hidden");  
+        document.querySelector('.auth').classList.add("hidden");  
+        form.classList.remove("hidden");  
+        tableau.classList.remove("hidden");  
+        exportPdfBtn.classList.remove("hidden");  
+        loadTransactions();  
+  
+        // Charger les autres utilisateurs si admin (inchangé)  
+        const isAdmin = user.email === "hervekpetonou4@gmail.com";  
+        if (isAdmin) {  
+          const q = await getDocs(collection(db, "transactions"));  
+          const emailsMap = new Map();  
+          q.forEach(docSnap => {  
+            const data = docSnap.data();  
+            if (data.uid && data.uid !== user.uid) {  
+              emailsMap.set(data.uid, data.email || "Utilisateur inconnu");  
+            }  
+          });  
+          userList.innerHTML = "<hr><strong>Utilisateurs :</strong><br>";  
+          emailsMap.forEach((email, uid) => {  
+            const el = document.createElement("div");  
+            el.className = "user-link";  
+            el.textContent = email;  
+            el.onclick = () => {  
+              viewingUid = uid;  
+              loadTransactions();  
+              backToMineBtn.classList.remove("hidden");  
+            };  
+            userList.appendChild(el);  
+          });  
+          userList.classList.remove("hidden");  
+        }  
+      } else {  
+        currentUser = null;  
+        profileSection.classList.add("hidden");  
+        document.querySelector('.auth').classList.remove("hidden");  
+        form.classList.add("hidden");  
+        tableau.classList.add("hidden");  
+        exportPdfBtn.classList.add("hidden");  
+        tableauBody.innerHTML = "";  
+        updateSoldeFromData([]);  
+      }  
+    });  
+  
+    form.addEventListener('submit', async (e) => {  
+      e.preventDefault();  
+      const date = document.getElementById('date').value;  
+      const type = document.getElementById('type').value;  
+      const montant = parseFloat(document.getElementById('montant').value);  
+      const description = document.getElementById('description').value;  
+  
+      if (currentEditId) {  
+        await updateDoc(doc(db, "transactions", currentEditId), { date, type, montant, description });  
+        currentEditId = null;  
+        submitBtn.textContent = "Ajouter";  
+        cancelBtn.classList.add("hidden");  
+      } else {  
+        await addDoc(collection(db, "transactions"), {  
+          uid: currentUser.uid,  
+          email: currentUser.email,  
+          date, type, montant, description  
+        });  
+      }  
+      form.reset();  
+      document.getElementById('date').valueAsDate = new Date();  
+    });  
+  
+    cancelBtn.addEventListener('click', () => {  
+      form.reset();  
+      currentEditId = null;  
+      submitBtn.textContent = "Ajouter";  
+      cancelBtn.classList.add("hidden");  
+      document.getElementById('date').valueAsDate = new Date();  
+    });  
+  
+    function updateSoldeFromData(data) {  
+      let totalB = 0, totalD = 0;  
+      data.forEach(item => {  
+        if (item.type === 'bénéfice') totalB += item.montant;  
+        else totalD += item.montant;  
+      });  
+      soldeDisplay.textContent = `${(totalB - totalD).toFixed(2)}`;  
+    }  
+  
+    // ===== TRI PAR DATE DÉCROISSANTE + AFFICHAGE =====  
+    function loadTransactions() {  
+      const q = query(collection(db, "transactions"), where("uid", "==", viewingUid));  
+      onSnapshot(q, snapshot => {  
+        const data = [];  
+        snapshot.forEach(docSnap => {  
+          const item = docSnap.data();  
+          item.id = docSnap.id;  
+          data.push(item);  
+        });  
+  
+        // Tri ISO YYYY-MM-DD : lexicographique OK pour décroissant  
+        data.sort((a, b) => b.date.localeCompare(a.date));  
+        currentData = data.slice(); // garder pour PDF  
+  
+        // (ré)afficher le tableau  
+        tableauBody.innerHTML = "";  
+        data.forEach(item => {  
+          const row = document.createElement("tr");  
+          row.innerHTML = `  
+            <td>${item.date}</td>  
+            <td>${item.type}</td>  
+            <td>${item.montant.toFixed(2)}</td>  
+            <td>${item.description || ""}</td>  
+            <td class="actions">  
+              <button class="btn-edit" data-id="${item.id}">Modifier</button>  
+              <button class="btn-delete" data-id="${item.id}">Supprimer</button>  
+            </td>  
+          `;  
+          tableauBody.appendChild(row);  
+        });  
+  
+        updateSoldeFromData(data);  
+  
+        document.querySelectorAll(".btn-edit").forEach(btn => {  
+          btn.onclick = () => {  
+            const item = data.find(x => x.id === btn.dataset.id);  
+            currentEditId = item.id;  
+            document.getElementById('date').value = item.date;  
+            document.getElementById('type').value = item.type;  
+            document.getElementById('montant').value = item.montant;  
+            document.getElementById('description').value = item.description || "";  
+            submitBtn.textContent = "Modifier";  
+            cancelBtn.classList.remove("hidden");  
+            form.scrollIntoView({ behavior: 'smooth' });  
+          };  
+        });  
+  
+        document.querySelectorAll(".btn-delete").forEach(btn => {  
+          btn.onclick = async () => {  
+            if (confirm("Confirmer la suppression ?")) {  
+              await deleteDoc(doc(db, "transactions", btn.dataset.id));  
+            }  
+          };  
+        });  
+      });  
+    }  
+  
+    // ===== EXPORT PDF comme la capture =====  
+exportPdfBtn.addEventListener("click", () => {  
+  const { jsPDF } = window.jspdf;  
+  const doc = new jsPDF();  
+  
+  // Titre  
+  doc.setFontSize(14);  
+  doc.text("Suivi Financier", 14, 18);  
+  
+  // 🔹 Ajouter le nom/email Gmail de l'utilisateur connecté  
+  // suppose que l'email est stocké dans currentUser.email  
+  if (currentUser && currentUser.email) {  
+    doc.setFontSize(11);  
+    doc.text("Utilisateur : " + currentUser.email, 14, 25);  
+  }  
+  
+  // Préparer lignes (ordre déjà décroissant via currentData)  
+  const body = currentData.map(item => [  
+    item.date,  
+    item.type,  
+    item.montant.toFixed(2),  
+    item.description || ""  
+  ]);  
+  
+  // Calcul solde total  
+  let totalB = 0, totalD = 0;  
+  currentData.forEach(it => {  
+    if (it.type === 'bénéfice') totalB += it.montant; else totalD += it.montant;  
+  });  
+  const soldeTotal = (totalB - totalD).toFixed(2);  
+  
+  // Ligne finale "Solde total" comme sur la capture  
+  body.push(["", "Solde total", soldeTotal, ""]);  
+  
+  // Tableau  
+  doc.autoTable({  
+    head: [["Date", "Type", "Montant (F)", "Description"]],  
+    body,  
+    // 🔹 Décale un peu le tableau plus bas si tu affiches l'email  
+    startY: currentUser && currentUser.email ? 32 : 26,  
+    theme: "grid",  
+    headStyles: { fillColor: [78, 163, 216] }, // bleu doux  
+    styles: { cellPadding: 3, fontSize: 10 }  
+  });  
+  
+  doc.save("suivi_financier.pdf");  
+});  
+  
+document.getElementById('date').valueAsDate = new Date();  
+  </script>  
+</body>  
 </html>
